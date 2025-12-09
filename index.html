@@ -202,13 +202,11 @@
       pointer-events: none;
     }
 
-    /* circle / rectangle feel */
     .char::before {
       border-radius: 50%;
       border: 2px solid var(--cinema-yellow);
     }
 
-    /* diamond / angled rect feel */
     .char::after {
       border-radius: 6px;
       border: 2px solid var(--cinema-accent);
@@ -357,13 +355,33 @@
   <script>
     function wrapLetters(element) {
       element.childNodes.forEach(node => {
-        if(node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent;
-          const wrapped = text.split('').map(char => char === ' ' ? ' ' : `<span class="char">${char}</span>`).join('');
-          const spanWrapper = document.createElement('span');
-          spanWrapper.innerHTML = wrapped;
-          node.replaceWith(spanWrapper);
-        } else if(node.nodeType === Node.ELEMENT_NODE) {
+          const words = text.split(/(\s+)/); // keep spaces as tokens [web:80]
+
+          const fragment = document.createDocumentFragment();
+
+          words.forEach(token => {
+            if (/^\s+$/.test(token)) {
+              fragment.appendChild(document.createTextNode(token));
+            } else if (token.length) {
+              const wordSpan = document.createElement('span');
+              wordSpan.style.whiteSpace = 'nowrap'; // keep this word together [web:91]
+
+              const chars = token.split('');
+              chars.forEach(ch => {
+                const charSpan = document.createElement('span');
+                charSpan.className = 'char';
+                charSpan.textContent = ch;
+                wordSpan.appendChild(charSpan);
+              });
+
+              fragment.appendChild(wordSpan);
+            }
+          });
+
+          node.replaceWith(fragment);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
           wrapLetters(node);
         }
       });
